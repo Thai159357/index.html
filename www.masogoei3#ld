@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBox Listing</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --accent:#ffb020;
+    --muted:#9aa6b2;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Inter", system-ui, sans-serif;
+    background:linear-gradient(180deg,#071021 0%, #081428 100%);
+    color:#e6eef6;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.02);
+  }
+  .logo{font-weight:700;font-size:20px;}
+  .logo span{color:var(--accent);}
+  nav{display:flex;gap:10px;align-items:center;}
+  input,select,button{
+    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.06);
+    color:#fff;
+    border-radius:6px;
+    padding:6px 10px;
+  }
+  main{flex:1;overflow:auto;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:16px;
+    padding:20px;
+  }
+  .card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.05);
+    padding:12px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.15s;
+    display:flex;
+    gap:12px;
+  }
+  .card:hover{transform:translateY(-5px);box-shadow:0 6px 25px rgba(0,0,0,0.5);}
+  .thumb{
+    width:72px;height:72px;border-radius:8px;
+    background:linear-gradient(45deg,#111827,#0b1220);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:13px;
+  }
+  .meta{font-size:13px;color:var(--muted);margin-top:6px;}
+  footer{
+    padding:16px;text-align:center;
+    color:var(--muted);font-size:13px;
+    border-top:1px solid rgba(255,255,255,0.05);
+  }
+  .modal{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.6);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hidden{display:none;}
+  .modal-content{
+    background:#081322;
+    padding:20px;
+    border-radius:10px;
+    max-width:700px;width:92%;
+    color:#e6eef6;
+    position:relative;
+  }
+  .close{
+    position:absolute;right:12px;top:8px;
+    font-size:22px;border:0;background:none;
+    color:#fff;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">My<span>Box</span></div>
+    <nav>
+      <input id="search" type="search" placeholder="ค้นหา...">
+      <select id="filterType">
+        <option value="">ทั้งหมด</option>
+        <option value="typeA">ประเภท A</option>
+        <option value="typeB">ประเภท B</option>
+      </select>
+      <button id="refreshBtn">รีเฟรช</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <footer>© <span id="year"></span> MyBox — ตัวอย่างเว็บเดียวจบ</footer>
+
+  <div id="detailModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="close" id="closeModal">&times;</button>
+      <div id="detailBody"></div>
+    </div>
+  </div>
+
+<script>
+const grid = document.getElementById('grid');
+const searchEl = document.getElementById('search');
+const filterType = document.getElementById('filterType');
+const refreshBtn = document.getElementById('refreshBtn');
+const modal = document.getElementById('detailModal');
+const closeModal = document.getElementById('closeModal');
+const detailBody = document.getElementById('detailBody');
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const items = [
+  { id:1, title:'Sandboxie', subtitle:'จำลองแอปอย่างปลอดภัย', description:'แอปนี้ช่วยให้คุณรันโปรแกรมในพื้นที่จำลอง (Sandbox) ปลอดภัยจากไวรัสและการแก้ไขระบบจริง', type:'typeA', status:'พร้อมใช้งาน' },
+  { id:2, title:'Wagyu Medium Rare', subtitle:'เนื้อย่างสุกกำลังดี', description:'วากิวเกรดพรีเมียม ย่างสุกระดับมีเดียมแรร์ ด้านนอกหอม ด้านในยังฉ่ำ', type:'typeB', status:'ขายดี' },
+  { id:3, title:'Soapesky Demo', subtitle:'ตัวอย่างโครงเว็บ', description:'เว็บไซต์ตัวอย่างแนวโทนเข้ม สีส้มเหลือง คล้ายเว็บข้อมูล/รายการ', type:'typeA', status:'ตัวอย่าง' }
+];
+
+function render(items){
+  grid.innerHTML = '';
+  if(items.length===0){grid.innerHTML='<p style="padding:20px;color:#9aa6b2">ไม่พบรายการ</p>';return;}
+  for(const it of items){
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="thumb">${it.title[0]}</div>
+      <div>
+        <h4>${it.title}</h4>
+        <div class="meta">${it.subtitle}</div>
+        <div class="meta" style="color:var(--accent);margin-top:4px;">${it.status}</div>
+      </div>
+    `;
+    card.onclick=()=>openDetail(it);
+    grid.appendChild(card);
+  }
+}
+function openDetail(it){
+  detailBody.innerHTML = `
+    <h2>${it.title}</h2>
+    <p>${it.description}</p>
+    <div class="meta">ประเภท: ${it.type}</div>
+    <div class="meta">สถานะ: ${it.status}</div>
+  `;
+  modal.classList.remove('hidden');
+}
+closeModal.onclick=()=>modal.classList.add('hidden');
+modal.onclick=e=>{if(e.target===modal)modal.classList.add('hidden');};
+
+function filter(){
+  const q = searchEl.value.toLowerCase();
+  const f = filterType.value;
+  const result = items.filter(it=>{
+    if(f && it.type!==f) return false;
+    if(q && !(it.title.toLowerCase().includes(q) || it.subtitle.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  render(result);
+}
+searchEl.oninput=filter;
+filterType.onchange=filter;
+refreshBtn.onclick=()=>{searchEl.value='';filterType.value='';render(items);}
+render(items);
+</script>
+</body>
+</html>
